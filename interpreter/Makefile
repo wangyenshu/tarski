@@ -51,19 +51,18 @@ extLibQEPCAD:=  ${qe}/source/qepcad.a \
     ${qe}/extensions/lift2D/lift2Do.a
     
 # Note that the adj2do and lif2Do extensions had to be added twice (in this order).
-
 # Find the openssl include/lib folders automatically on a Mac. We assume that Homebrew is already installed.
-ifeq ($(PLATFORM),WASM)
-WASM_OPENSSL_INCLUDE=$(EMSDK)/upstream/emscripten/cache/sysroot/include
-WASM_OPENSSL_LIB=$(EMSDK)/upstream/emscripten/cache/sysroot/lib
-extIncludesMd5:=-Icache/sysroot/include -Icache/sysroot/include/openssl
-extLibMD5:=$(WASM_OPENSSL_LIB)/libssl.a $(WASM_OPENSSL_LIB)/libcrypto.a
+ifeq ($(PLATFORM),MAC)
+MAC_OPENSSL_INCLUDE := $(shell find /usr/local/Cellar/openssl*/* -name include | sort | tail -1)
+MAC_OPENSSL_LIB := $(shell find /usr/local/Cellar/openssl*/* -name lib | sort | tail -1)
+extIncludesMD5:=-I$(MAC_OPENSSL_INCLUDE)
+extLibMD5:=$(MAC_OPENSSL_LIB)/libssl.a $(MAC_OPENSSL_LIB)/libcrypto.a
 endif
 
 # For wasm we need to have openssl preinstalled
 ifeq ($(PLATFORM),WASM)
-WASM_OPENSSL_INCLUDE=$(EMSDK)/upstream/emscripten/system/include
-WASM_OPENSSL_LIB=$(EMSDK)/upstream/emscripten/system/lib
+WASM_OPENSSL_INCLUDE=$(EMSDK)/upstream/emscripten/cache/sysroot/include
+WASM_OPENSSL_LIB=$(EMSDK)/upstream/emscripten/cache/sysroot/lib
 extIncludesMd5:=-Icache/sysroot/include -Icache/sysroot/include/openssl
 extLibMD5:=$(WASM_OPENSSL_LIB)/libssl.a $(WASM_OPENSSL_LIB)/libcrypto.a
 endif
