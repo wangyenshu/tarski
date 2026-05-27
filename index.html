@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarski WebAssembly Terminal</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/jquery"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery.terminal/js/jquery.terminal.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/jquery.terminal/css/jquery.terminal.min.css" rel="stylesheet"/>
+    
+    <style>
+        body { margin: 0; background-color: black; }
+        #terminal { width: 100vw; height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="terminal"></div>
+    
+    <script src="tarski.js"></script>
+    
+    <script>
+        var term = $('#terminal').terminal(function(command) {
+            if (command.trim() !== '') {
+                try {
+                    if (window.tarskiEval) {
+                        
+                        var result = window.tarskiEval(command);
+                        
+                        if (result !== undefined && result !== null && result.trim() !== '') {
+                            this.echo(String(result));
+                        }
+
+                    } else {
+                        this.error("Tarski is still loading. Please wait a moment...");
+                    }
+                } catch (e) {
+                    this.error("Execution error: " + e);
+                }
+            }
+        }, {
+            greetings: 'Welcome to Tarski (WebAssembly Edition)\nType your commands below.',
+            prompt: 'tarski> ',
+            name: 'tarski_web'
+        });
+
+        Tarski({
+            print: function(text) {
+                if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+                term.echo(text);
+            },
+            printErr: function(text) {
+                if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+                term.error(text);
+            }
+        }).then(function(Module) {
+            
+            var tarskiInit = Module.cwrap('TARSKIINIT', null, []);
+            window.tarskiEval = Module.cwrap('TARSKIEVAL', 'string', ['string']);
+            
+            tarskiInit();
+            
+        }).catch(function(err) {
+            term.error("Failed to load Tarski WASM module: " + err);
+        });
+    </script>
+</body>
+</html>
